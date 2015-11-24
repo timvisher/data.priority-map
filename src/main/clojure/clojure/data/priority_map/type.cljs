@@ -1,4 +1,4 @@
-(ns clojure.data.priority-map
+(ns clojure.data.priority-map.type
   (:require [cljs.core :as core])
   (:use [cljs.reader :only [register-tag-parser!
                             reader-error]])
@@ -23,10 +23,10 @@
       (-assoc this (-nth entry 0) (-nth entry 1))
       (reduce -conj this entry)))
 
-  IEmptyableCollection
-  (-empty [this] (with-meta
-                   clojure.data.priority-map.PersistentPriorityMap.EMPTY
-                   meta))
+  ;; IEmptyableCollection
+  ;; (-empty [this] (with-meta
+  ;;                  clojure.data.priority-map.PersistentPriorityMap.EMPTY
+  ;;                  meta))
 
   IEquiv
   (-equiv [this other]
@@ -169,59 +169,3 @@
     (-lookup this item))
   (-invoke [this item not-found]
     (-lookup this item not-found)))
-
-(set! clojure.data.priority-map.PersistentPriorityMap.EMPTY
-      (PersistentPriorityMap. (sorted-map) {} {} identity nil))
-
-(defn- pm-empty-by [comparator]
-  (PersistentPriorityMap. (sorted-map-by comparator) {} {} identity nil))
-
-(defn- pm-empty-keyfn
-  ([keyfn] (PersistentPriorityMap. (sorted-map) {} {} keyfn nil))
-  ([keyfn comparator] (PersistentPriorityMap. (sorted-map-by comparator) {} {} keyfn nil)))
-
-(defn- read-priority-map [elems]
-  (if (map? elems)
-    (into clojure.data.priority-map.PersistentPriorityMap.EMPTY elems)
-    (reader-error nil "Priority map literal expects a map for its elements.")))
-
-(register-tag-parser! "clojure.data.priority-map" read-priority-map)
-
-(defn priority-map
-  "keyval => key val
-  Returns a new priority map with supplied mappings."
-  ([& keyvals]
-     (loop [in (seq keyvals) out clojure.data.priority-map.PersistentPriorityMap.EMPTY]
-       (if in
-         (recur (nnext in) (assoc out (first in) (second in)))
-         out))))
-
-(defn priority-map-by
-  "keyval => key val
-  Returns a new priority map with supplied
-  mappings, using the supplied comparator."
-  ([comparator & keyvals]
-     (loop [in (seq keyvals) out (pm-empty-by comparator)]
-       (if in
-         (recur (nnext in) (assoc out (first in) (second in)))
-         out))))
-
-(defn priority-map-keyfn
-  "keyval => key val
-  Returns a new priority map with supplied
-  mappings, using the supplied keyfn."
-  ([keyfn & keyvals]
-     (loop [in (seq keyvals) out (pm-empty-keyfn keyfn)]
-       (if in
-         (recur (nnext in) (assoc out (first in) (second in)))
-         out))))
-
-(defn priority-map-keyfn-by
-  "keyval => key val
-  Returns a new priority map with supplied
-  mappings, using the supplied keyfn and comparator."
-  ([keyfn comparator & keyvals]
-     (loop [in (seq keyvals) out (pm-empty-keyfn keyfn comparator)]
-       (if in
-         (recur (nnext in) (assoc out (first in) (second in)))
-         out))))
